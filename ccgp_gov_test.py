@@ -5,7 +5,12 @@
 # 比如：start_year=2020  程序将从2020-01-01开始查找直到当前日期，这段时间范围内的符合条件数据
 # 实现了自动翻页。（当前每页展示20条数据）
 # 实现了逐年查询。
-# 通过is_exist()函数，可以判断是不是自己需要的公告信息
+# 另外，通过is_exist()函数，可以判断是不是自己需要的公告信息
+# 最后，将抓取的信息写入Excel文件，生产的Excel文件和当前文件同目录
+# 如果，更进一步，打开项目中标公告详情页链接，抓取项目中标人名称、中标金额等，更好！
+# 注意！为了解决服务端反爬虫策略，采用了两个方案：
+# 1、每次请求随机一个User-Agent
+# 2、每次请求前随机等待几秒
 
 import time
 
@@ -20,10 +25,10 @@ import math
 import random
 
 def open_url(url , params , refer=None):
-    "发起一次http请求，返回一个response"
+    "功能：发起一次http请求，返回一个response"
     headers = get_request_headers(refer)
 
-    # 避免请求被拒绝（403 Forbidden），延迟3秒后请求服务器
+    # 避免请求被拒绝（403 Forbidden），延迟几秒后请求服务器
     time.sleep(random.randint(2,6))
     response = requests.get(url, headers=headers, params=params)
 
@@ -36,8 +41,7 @@ def open_url(url , params , refer=None):
 
 def get_request_headers(referer=None):
     "返回一个http请求头"
-    my_headers = [
-        '',
+    user_agents1 = [
         'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1',
         'Mozilla/5.0 (Linux; Android 8.0; Pixel 2 Build/OPD3.170816.012) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Mobile Safari/537.36',
         'Mozilla/5.0 (iPad; CPU OS 13_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/87.0.4280.77 Mobile/15E148 Safari/604.1',
@@ -58,7 +62,7 @@ def get_request_headers(referer=None):
         "Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:10.0) Gecko/20100101 Firefox/10.0 ",
     ]
 
-    ua = random.choice(my_headers)
+    ua = random.choice(user_agents1)
     # ua = random.choice(user_agents)
     # print(ua)
 
@@ -75,7 +79,7 @@ def get_request_headers(referer=None):
     # headers["User-Agent"] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36'
     return headers
 
-def crawler_ccgp(sheetdata = [] , year='2020', buyerName='农业农村部'):
+def crawler_ccgp(sheetdata = [] , year='2020', buyerName='商务部'):
     "这是一个关于《中国政府采购网》中标信息的爬虫；返回二维列表 "
     url = 'http://search.ccgp.gov.cn/bxsearch?'
 
